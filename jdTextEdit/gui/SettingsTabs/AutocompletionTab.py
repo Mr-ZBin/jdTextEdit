@@ -1,18 +1,25 @@
 from PyQt6.QtWidgets import QWidget, QCheckBox, QSpinBox, QLabel, QVBoxLayout, QHBoxLayout
 from jdTextEdit.api.SettingsTabBase import SettingsTabBase
+from PyQt6.QtCore import QCoreApplication
 from jdTextEdit.Settings import Settings
+from typing import TYPE_CHECKING
 
-class AutocompletionTab(QWidget,SettingsTabBase):
-    def __init__(self, env):
+
+if TYPE_CHECKING:
+    from jdTextEdit.Environment import Environment
+
+
+class AutocompletionTab(QWidget, SettingsTabBase):
+    def __init__(self, env: "Environment"):
         super().__init__()
         self.env = env
 
-        self.enableAutocompletionCheckBox = QCheckBox(env.translate("settingsWindow.autocompletion.checkbox.enableAutocompletion"))
-        self.useWordsFromDocument = QCheckBox(env.translate("settingsWindow.autocompletion.checkbox.useWordsFromDocument"))
-        self.useAPI = QCheckBox(env.translate("settingsWindow.autocompletion.checkbox.useAPI"))
-        self.caseSensitive = QCheckBox(env.translate("settingsWindow.autocompletion.checkbox.caseSensitive"))
-        self.replaceWord = QCheckBox(env.translate("settingsWindow.autocompletion.checkbox.replaceWord"))
-        self.thresholdLabel = QLabel(env.translate("settingsWindow.autocompletion.label.threshold"))
+        self.enableAutocompletionCheckBox = QCheckBox(QCoreApplication.translate("AutocompletionTab", "Enable Autocompletion"))
+        self.useWordsFromDocument = QCheckBox(QCoreApplication.translate("AutocompletionTab", "Use Words from Document"))
+        self.useAPI = QCheckBox(QCoreApplication.translate("AutocompletionTab", "Use API"))
+        self.caseSensitive = QCheckBox(QCoreApplication.translate("AutocompletionTab", "Case Sensitive"))
+        self.replaceWord = QCheckBox(QCoreApplication.translate("AutocompletionTab", "Replace Word"))
+        self.thresholdLabel = QLabel(QCoreApplication.translate("AutocompletionTab", "Autocomplete at this char:"))
         self.thresholdSpinBox = QSpinBox()
 
         self.enableAutocompletionCheckBox.stateChanged.connect(self.updateSettingsEnabled)
@@ -33,7 +40,7 @@ class AutocompletionTab(QWidget,SettingsTabBase):
         self.setLayout(mainLayout)
 
     def updateSettingsEnabled(self):
-        enabled = bool(self.enableAutocompletionCheckBox.checkState())
+        enabled = self.enableAutocompletionCheckBox.isChecked()
         self.useWordsFromDocument.setEnabled(enabled)
         self.useAPI.setEnabled(enabled)
         self.caseSensitive.setEnabled(enabled)
@@ -51,12 +58,12 @@ class AutocompletionTab(QWidget,SettingsTabBase):
         self.updateSettingsEnabled()
 
     def getSettings(self, settings: Settings):
-        settings.set("enableAutocompletion",self.enableAutocompletionCheckBox.isChecked())
-        settings.set("autocompletionUseDocument",self.useWordsFromDocument.isChecked())
-        settings.set("autocompletionUseAPI",self.useAPI.isChecked())
-        settings.set("autocompletionCaseSensitive",self.caseSensitive.isChecked())
-        settings.set("autocompletionReplaceWord",self.replaceWord.isChecked())
-        settings.set("autocompleteThreshold",self.thresholdSpinBox.value())
+        settings.set("enableAutocompletion", self.enableAutocompletionCheckBox.isChecked())
+        settings.set("autocompletionUseDocument", self.useWordsFromDocument.isChecked())
+        settings.set("autocompletionUseAPI", self.useAPI.isChecked())
+        settings.set("autocompletionCaseSensitive", self.caseSensitive.isChecked())
+        settings.set("autocompletionReplaceWord", self.replaceWord.isChecked())
+        settings.set("autocompleteThreshold", self.thresholdSpinBox.value())
 
     def title(self) -> str:
-        return self.env.translate("settingsWindow.autocompletion")
+        return QCoreApplication.translate("AutocompletionTab", "Autocompletion")

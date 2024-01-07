@@ -1,7 +1,8 @@
 __pycache__/
 
 # translations
-.qm
+*.qm
+*.mo
 
 #setup.py
 build/
@@ -9,7 +10,7 @@ dist/
 jdTextEdit.egg-info/
 
 #portable mode
-jdTextEdit/data
+jdTextEditData/
 
 #options
 jdTextEdit/commands.json
@@ -25,4 +26,11 @@ doc/build
 
 #Idea
 .idea/
+.run/
 venv/
+
+# Binary build
+*.spec
+*.exe
+Output/
+WindowsBuild/

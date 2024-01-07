@@ -1,11 +1,19 @@
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QGridLayout, QHBoxLayout, QVBoxLayout, QLayout
+from PyQt6.QtWidgets import QDialog, QLabel, QPushButton, QGridLayout, QHBoxLayout, QVBoxLayout, QLayout
 from jdTextEdit.Functions import getThemeIcon
+from PyQt6.QtCore import QCoreApplication
+from typing import TYPE_CHECKING
 import re
 
-class DocumentStatistics(QWidget):
-    def __init__(self, env):
+
+if TYPE_CHECKING:
+    from jdTextEdit.Environment import Environment
+    from jdTextEdit.gui.CodeEdit import CodeEdit
+
+
+class DocumentStatistics(QDialog):
+    def __init__(self, env: "Environment"):
         super().__init__()
-        self.selectionLabel = QLabel(env.translate("documentStatistics.selection"))
+        self.selectionLabel = QLabel(QCoreApplication.translate("DocumentStatistics", "Selection"))
         self.linesDocument = QLabel("0")
         self.linesSelection = QLabel("0")
         self.wordsDocument = QLabel("0")
@@ -14,26 +22,26 @@ class DocumentStatistics(QWidget):
         self.charactersSpacesSelection = QLabel("0")
         self.charactersNoSpacesDocument = QLabel("0")
         self.charactersNoSpacesSelection = QLabel("0")
-        closeButton = QPushButton(env.translate("button.close"))
+        closeButton = QPushButton(QCoreApplication.translate("DocumentStatistics", "Close"))
 
-        closeButton.setIcon(getThemeIcon(env,"window-close"))
+        closeButton.setIcon(getThemeIcon(env, "window-close"))
         closeButton.clicked.connect(self.close)
 
         gridLayout = QGridLayout()
-        gridLayout.addWidget(QLabel(env.translate("documentStatistics.document")),0,1)
-        gridLayout.addWidget(self.selectionLabel,0,2)
-        gridLayout.addWidget(QLabel(env.translate("documentStatistics.lines")),1,0)
-        gridLayout.addWidget(self.linesDocument,1,1)
-        gridLayout.addWidget(self.linesSelection,1,2)
-        gridLayout.addWidget(QLabel(env.translate("documentStatistics.words")),2,0)
-        gridLayout.addWidget(self.wordsDocument,2,1)
-        gridLayout.addWidget(self.wordsSelection,2,2)
-        gridLayout.addWidget(QLabel(env.translate("documentStatistics.charactersSpaces")),3,0)
-        gridLayout.addWidget(self.charactersSpacesDocument,3,1)
-        gridLayout.addWidget(self.charactersSpacesSelection,3,2)
-        gridLayout.addWidget(QLabel(env.translate("documentStatistics.charactersNoSpaces")),4,0)
-        gridLayout.addWidget(self.charactersNoSpacesDocument,4,1)
-        gridLayout.addWidget(self.charactersNoSpacesSelection,4,2)
+        gridLayout.addWidget(QLabel(QCoreApplication.translate("DocumentStatistics", "Document")), 0, 1)
+        gridLayout.addWidget(self.selectionLabel, 0, 2)
+        gridLayout.addWidget(QLabel(QCoreApplication.translate("DocumentStatistics", "Lines")), 1, 0)
+        gridLayout.addWidget(self.linesDocument, 1, 1)
+        gridLayout.addWidget(self.linesSelection, 1, 2)
+        gridLayout.addWidget(QLabel(QCoreApplication.translate("DocumentStatistics", "Words")), 2, 0)
+        gridLayout.addWidget(self.wordsDocument, 2, 1)
+        gridLayout.addWidget(self.wordsSelection, 2, 2)
+        gridLayout.addWidget(QLabel(QCoreApplication.translate("DocumentStatistics", "Characters (with spaces)")), 3, 0)
+        gridLayout.addWidget(self.charactersSpacesDocument, 3, 1)
+        gridLayout.addWidget(self.charactersSpacesSelection, 3, 2)
+        gridLayout.addWidget(QLabel(QCoreApplication.translate("DocumentStatistics", "Characters (no spaces)")), 4, 0)
+        gridLayout.addWidget(self.charactersNoSpacesDocument, 4, 1)
+        gridLayout.addWidget(self.charactersNoSpacesSelection, 4, 2)
 
         buttonLayout = QHBoxLayout()
         buttonLayout.addStretch(1)
@@ -45,9 +53,9 @@ class DocumentStatistics(QWidget):
         mainLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
         self.setLayout(mainLayout)
-        self.setWindowTitle(env.translate("documentStatistics.title"))
+        self.setWindowTitle(QCoreApplication.translate("DocumentStatistics", "Document Statistics"))
 
-    def openWindow(self, textEdit):
+    def openWindow(self, textEdit: "CodeEdit"):
         documentString = textEdit.text()
         selectionString = textEdit.selectedText()
 
@@ -67,8 +75,7 @@ class DocumentStatistics(QWidget):
         self.wordsSelection.setText(str(len(re.findall(r'\w+', selectionString))))
         self.charactersSpacesDocument.setText(str(len(documentString)))
         self.charactersSpacesSelection.setText(str(len(selectionString)))
-        self.charactersNoSpacesDocument.setText(str(len(documentString.replace(" ","").replace("\n","").replace("\t",""))))
-        self.charactersNoSpacesSelection.setText(str(len(selectionString.replace(" ","").replace("\n","").replace("\t",""))))
+        self.charactersNoSpacesDocument.setText(str(len(documentString.replace(" ", "").replace("\n", "").replace("\t", ""))))
+        self.charactersNoSpacesSelection.setText(str(len(selectionString.replace(" ", "").replace("\n", "").replace("\t", ""))))
 
-        self.show()
-        QApplication.setActiveWindow(self)
+        self.exec()

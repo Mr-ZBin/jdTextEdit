@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.5
+Type=Application
+Name=jdTextEdit
+Comment=An advanced text editor
+Exec=jdTextEdit
+Icon=page.codeberg.JakobDev.jdTextEdit
+Terminal=false
+StartupNotify=false
+Categories=TextEditor;Development;Qt;
+SingleMainWindow=true
+MimeType=text/plain;

@@ -1,24 +1,32 @@
+from jdTextEdit.Functions import readJsonFile, getLexerStyles
+from jdTextEdit.core.Logger import getGlobalLogger
 from jdTextEdit.api.ThemeBase import ThemeBase
-from jdTextEdit.Functions import readJsonFile
 from PyQt6.QtGui import QColor
-import traceback
 import sys
 import os
 
 
 class FileTheme(ThemeBase):
-    def __init__(self,path):
-        self.themeData = readJsonFile(path,None)
+    def __init__(self, path: str):
+        if path is None:
+            return
+        self.themeData = readJsonFile(path, None)
         if not self.themeData:
             raise BaseException
         if "id" not in self.themeData:
-            print(f"{os.path.basename(path)} must contain key id", file=sys.stderr)
+            getGlobalLogger().error(f"{os.path.basename(path)} must contain key id")
             raise BaseException
         if "name" not in self.themeData:
-            print(f"{os.path.basename(path)} must contain key name", file=sys.stderr)
+            getGlobalLogger().error(f"{os.path.basename(path)} must contain key name")
             raise BaseException
 
-    def applyTheme(self,editWidget,lexer):
+    @classmethod
+    def fromDict(cls, data):
+        theme = cls(None)
+        theme.themeData = data
+        return theme
+
+    def applyTheme(self, editWidget, lexer) -> None:
         if "global" in self.themeData:
             editWidget.setColor(QColor(self.themeData["global"].get("textColor", "#000000")))
             editWidget.setPaper(QColor(self.themeData["global"].get("backgroundColor", "#FFFFFF")))
@@ -37,15 +45,12 @@ class FileTheme(ThemeBase):
         lexerLanguage = lexer.language()
         if lexerLanguage not in self.themeData["lexer"]:
             return
-        for key,value in self.themeData["lexer"][lexerLanguage].items():
-            try:
-                colorID = getattr(lexer, key)
-                lexer.setColor(QColor(value), colorID)
-            except Exception as e:
-                print(traceback.format_exc(), end="", file=sys.stderr)
+        for key, value in getLexerStyles(lexer).items():
+            if key in self.themeData["lexer"][lexerLanguage]:
+                lexer.setColor(QColor(self.themeData["lexer"][lexerLanguage][key]), value)
 
-    def getName(self):
+    def getName(self) -> str:
         return self.themeData["name"]
 
-    def getID(self):
+    def getID(self) -> str:
         return self.themeData["id"]

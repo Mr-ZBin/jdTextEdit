@@ -1,19 +1,26 @@
 from PyQt6.QtWidgets import QWidget, QLineEdit, QListWidget, QListWidgetItem, QPushButton, QHBoxLayout, QVBoxLayout
-from jdTextEdit.Functions import showMessageBox, restoreWindowState
+from jdTextEdit.Functions import showMessageBox, restoreWindowState, sortActionDict
+from PyQt6.QtCore import QCoreApplication
+from typing import TYPE_CHECKING
+from PyQt6.QtGui import QAction
 import traceback
 import sys
 
 
+if TYPE_CHECKING:
+    from jdTextEdit.Environment import Environment
+
+
 class ActionSearchWindow(QWidget):
-    def __init__(self, env):
+    def __init__(self, env: "Environment"):
         super().__init__()
         self._env = env
-        self._actionList = []
+        self._actionList: list[QAction] = []
 
         self._searchBox = QLineEdit()
         self._resultList = QListWidget()
-        self._okButton = QPushButton(env.translate("button.ok"))
-        cancelButton = QPushButton(env.translate("button.cancel"))
+        self._okButton = QPushButton(QCoreApplication.translate("ActionSearchWindow", "OK"))
+        cancelButton = QPushButton(QCoreApplication.translate("ActionSearchWindow", "Cancel"))
 
         self._searchBox.textChanged.connect(self._doSearch)
         self._resultList.itemClicked.connect(lambda: self._okButton.setEnabled(True))
@@ -35,7 +42,7 @@ class ActionSearchWindow(QWidget):
         mainLayout.addWidget(self._resultList)
         mainLayout.addLayout(buttonLayout)
 
-        self.setWindowTitle(env.translate("searchActionWindow.title"))
+        self.setWindowTitle(QCoreApplication.translate("ActionSearchWindow", "Search Action"))
         self.setLayout(mainLayout)
 
         restoreWindowState(self, env.windowState, "ActionSearchWindow")
@@ -45,7 +52,7 @@ class ActionSearchWindow(QWidget):
         self._actionList.clear()
         self._okButton.setEnabled(False)
         searchString = self._searchBox.text().lower()
-        for key, value in self._env.menuActions.items():
+        for key, value in sortActionDict(self._env.menuActions).items():
             if value.data()[0] == "separator":
                 continue
             actionText = value.text().replace("&", "")
@@ -59,9 +66,9 @@ class ActionSearchWindow(QWidget):
             pos = self._resultList.currentRow()
             self._actionList[pos].triggered.emit()
             self.close()
-        except Exception:
-            print(traceback.format_exc(), end="", file=sys.stderr)
-            showMessageBox(self._env.translate("unknownError.title"), self._env.translate("unknownError.text"))
+        except Exception as ex:
+            self._env.logger.exception(ex)
+            showMessageBox(QCoreApplication.translate("ActionSearchWindow", "Unknown error"), QCoreApplication.translate("ActionSearchWindow", "An unknown error occured"))
 
     def openWindow(self):
         self._searchBox.setText("")

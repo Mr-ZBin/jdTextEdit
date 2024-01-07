@@ -17,21 +17,28 @@ from jdTextEdit.gui.SettingsTabs.StatusBarTab import StatusBarTab
 from jdTextEdit.gui.SettingsTabs.TerminalEmulatorTab import TerminalEmulatorTab
 from jdTextEdit.gui.SettingsTabs.PluginTab import PluginTab
 from jdTextEdit.Functions import restoreWindowState
+from PyQt6.QtCore import QCoreApplication
 from jdTextEdit.Settings import Settings
+from typing import TYPE_CHECKING
 import platform
 
 
+if TYPE_CHECKING:
+    from jdTextEdit.api.SettingsTabBase import SettingsTabBase
+    from jdTextEdit.Environment import Environment
+
+
 class SettingsWindow(QWidget):
-    def __init__(self,env):
+    def __init__(self, env: "Environment"):
         super().__init__()
         self.env = env
         self.tabWidget = QTabWidget()
         self.listWidget = QListWidget()
-        self.tabs = []
+        self.tabs: list[SettingsTabBase] = []
 
-        okButton = QPushButton(env.translate("button.ok"))
-        cancelButton = QPushButton(env.translate("button.cancel"))
-        defaultButton = QPushButton(env.translate("settingsWindow.button.default"))
+        okButton = QPushButton(QCoreApplication.translate("SettingsWindow", "OK"))
+        cancelButton = QPushButton(QCoreApplication.translate("SettingsWindow", "Cancel"))
+        defaultButton = QPushButton(QCoreApplication.translate("SettingsWindow", "Default"))
 
         self.listWidget.currentItemChanged.connect(self.changeWidget)
         okButton.clicked.connect(self.okButtonClicked)
@@ -61,27 +68,27 @@ class SettingsWindow(QWidget):
             mainLayout.addLayout(buttonLayout)
 
         self.setLayout(mainLayout)
-        self.setWindowTitle(env.translate("settingsWindow.title"))
+        self.setWindowTitle(QCoreApplication.translate("SettingsWindow", "Settings"))
         restoreWindowState(self, env.windowState, "SettingsWindow")
 
-    def changeWidget(self):
+    def changeWidget(self) -> None:
         self.centralLayout.itemAt(1).widget().setParent(None)
-        self.centralLayout.addWidget(self.tabs[self.listWidget.currentRow()],3)
+        self.centralLayout.addWidget(self.tabs[self.listWidget.currentRow()], 3)
 
-    def newTab(self,tab):
+    def newTab(self, tab: "SettingsTabBase") -> None:
         self.tabs.append(tab)
         if self.env.settings.get("settingsWindowUseModernDesign"):
             self.listWidget.addItem(tab.title())
         else:
             self.tabWidget.addTab(tab, tab.title())
 
-    def openWindow(self):
+    def openWindow(self) -> None:
         for i in self.tabs:
             i.updateTab(self.env.settings)
         self.show()
         QApplication.setActiveWindow(self)
 
-    def okButtonClicked(self):
+    def okButtonClicked(self) -> None:
         for i in self.tabs:
             i.getSettings(self.env.settings)
         self.env.mainWindow.updateSettings(self.env.settings)
@@ -91,12 +98,12 @@ class SettingsWindow(QWidget):
                 tabWidget.widget(i).getCodeEditWidget().setSettings(self.env.settings)
         self.close()
 
-    def defaultButtonClicked(self):
+    def defaultButtonClicked(self) -> None:
         defaultSettings = Settings(defaultSettings=self.env.defaultSettings)
         for i in self.tabs:
             i.updateTab(defaultSettings)
 
-    def setup(self):
+    def setup(self) -> None:
         self.newTab(GeneralTab(self.env))
         self.newTab(EditorTab(self.env))
         self.newTab(AutocompletionTab(self.env))
@@ -116,7 +123,7 @@ class SettingsWindow(QWidget):
             self.newTab(TerminalEmulatorTab(self.env))
         for i in self.env.customSettingsTabs:
             self.newTab(i)
-        if self.env.settings.loadPlugins:
+        if self.env.settings.get("loadPlugins"):
             self.newTab(PluginTab(self.env))
         for i in self.tabs:
             if hasattr(i, "setup"):

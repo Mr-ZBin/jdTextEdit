@@ -1,0 +1,17 @@
+depends_on:
+    - freedesktop-check
+    - check-data-files
+
+steps:
+    sourceforge_deploy:
+        image: codeberg.org/jakobdev/python-ci-build-container:latest
+        commands:
+            - init-container
+            - source set-file-env VERSION jdTextEdit/version.txt
+            - full-python-build --name jdTextEdit --version $VERSION
+            - write-changelog-readme --name jdTextEdit --version $VERSION --output-file Output/README.md
+            - sourceforge-upload --upload-dir ./Output --project jdtextedit --version $VERSION --app-name jdTextEdit
+        secrets: [SOURCEFORGE_USERNAME, SOURCEFORGE_PASSWORD, SOURCEFORGE_API_KEY]
+
+when:
+    event: tag

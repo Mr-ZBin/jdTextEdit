@@ -1,44 +1,101 @@
-from PyQt6.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QLayout
-from jdTextEdit.Functions import getThemeIcon, restoreWindowState
+from PyQt6.QtWidgets import QWidget, QLabel, QTextBrowser, QPushButton, QTabWidget, QVBoxLayout
+from jdTextEdit.Functions import getThemeIcon, readJsonFile
+from jdTextEdit.Languages import getLanguageNames
+from PyQt6.QtCore import Qt, QCoreApplication
+from typing import TYPE_CHECKING
 from PyQt6.QtGui import QIcon
-from PyQt6.QtCore import Qt
-import webbrowser
 import os
 
-class AboutWindow(QWidget):
-    def __init__(self, env):
+
+if TYPE_CHECKING:
+    from jdTextEdit.Environment import Environment
+
+
+class AboutTab(QWidget):
+    def __init__(self, env: "Environment") -> None:
         super().__init__()
-        logo = QLabel()
-        logo.setPixmap(QIcon(os.path.join(env.programDir, "Logo.svg")).pixmap(100, 100))
-        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         text = "<center>"
-        text += (env.translate("aboutWindow.label.title") % env.version) + "<br><br>"
-        text += env.translate("aboutWindow.label.description") + "<br><br>"
-        text +=  env.translate("aboutWindow.label.license") + "<br><br>"
-        text += env.translate("aboutWindow.label.logoAuthor") + "<br><br>"
+        text += QCoreApplication.translate("AboutWindow", "jdTextEdit is a feature rich text editor with plugin support") + "<br><br>"
+        text += QCoreApplication.translate("AboutWindow", "This Program is licensed under GPL 3") + "<br><br>"
+        text += QCoreApplication.translate("AboutWindow", "The logo was made by Axel-Erfurt") + "<br><br>"
         if "aboutMessage" in env.distributionSettings:
             text += env.distributionSettings["aboutMessage"] + "<br><br>"
-        text += "Copyright © 2019-2022 JakobDev</center>"
-        label = QLabel(text)
-        #label = QLabel("<center>" + (env.translate("aboutWindow.label.title") % env.version) + "<br><br>" + env.translate("aboutWindow.label.description") + "<br><br>"+ env.translate("aboutWindow.label.license") + "<br><br>"  + env.translate("aboutWindow.label.logoAuthor") + "<br><br>Copyright © 2019-2021 JakobDev</center>")
-        viewSourceButton = QPushButton(env.translate("aboutWindow.button.viewSource"))
-        closeButton = QPushButton(env.translate("button.close"))
+        text += "Copyright © 2019-2023 JakobDev</center>"
 
-        viewSourceButton.setIcon(getThemeIcon(env, "applications-internet"))
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(QLabel(text))
+        mainLayout.addStretch(1)
+
+        self.setLayout(mainLayout)
+
+
+class TranslatorsTab(QWidget):
+    def __init__(self, env: "Environment") -> None:
+        super().__init__()
+
+        translatorsView = QTextBrowser()
+        translatorsText = ""
+        languageNames = getLanguageNames()
+        for language, translators in readJsonFile(os.path.join(env.programDir, "data", "translators.json"), {}).items():
+            translatorsText += f"<b>{languageNames.get(language, language)}</b><br>\n"
+            for translatorName in translators:
+                translatorsText += f"{translatorName}<br>\n"
+            translatorsText += "<br>\n"
+
+        if translatorsText == "":
+            translatorsView.setText(QCoreApplication.translate("AboutWindow", "Error: translators.json was not found"))
+        else:
+            translatorsText = translatorsText.removesuffix("<br>\n")
+            translatorsView.setHtml(translatorsText)
+
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(QLabel("<center>" + QCoreApplication.translate("AboutWindow", "The following people translated jdTextEdit:") + "</center>"))
+        mainLayout.addWidget(translatorsView)
+
+        self.setLayout(mainLayout)
+
+
+class ChangelogTab(QWidget):
+    def __init__(self, env: "Environment") -> None:
+        super().__init__()
+
+        changelogView = QTextBrowser()
+
+        with open(os.path.join(env.programDir, "data", "changelog.html"), "r", encoding="utf-8") as f:
+            changelogView.setHtml(f.read())
+
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(changelogView)
+
+        self.setLayout(mainLayout)
+
+
+class AboutWindow(QWidget):
+    def __init__(self, env: "Environment") -> None:
+        super().__init__()
+
+        logo = QLabel()
+        logo.setPixmap(QIcon(os.path.join(env.programDir, "Logo.svg")).pixmap(64, 64))
+        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        closeButton = QPushButton(QCoreApplication.translate("AboutWindow", "Close"))
+
+        tabWidget = QTabWidget()
+        tabWidget.addTab(AboutTab(env), QCoreApplication.translate("AboutWindow", "About"))
+        tabWidget.addTab(TranslatorsTab(env), QCoreApplication.translate("AboutWindow", "Translators"))
+        tabWidget.addTab(ChangelogTab(env), QCoreApplication.translate("AboutWindow", "Changelog"))
+
         closeButton.setIcon(getThemeIcon(env, "window-close"))
 
-        viewSourceButton.clicked.connect(lambda: webbrowser.open("https://gitlab.com/JakobDev/jdTextEdit"))
         closeButton.clicked.connect(self.close)
-
-        buttonLayout = QHBoxLayout()
-        buttonLayout.addWidget(viewSourceButton)
-        buttonLayout.addWidget(closeButton)
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(logo)
-        mainLayout.addWidget(label)
-        mainLayout.addLayout(buttonLayout)
-        mainLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+        mainLayout.addWidget(QLabel("<center>" + QCoreApplication.translate("AboutWindow", "jdTextEdit version {{version}}").replace("{{version}}", env.version) + "<center>"))
+        mainLayout.addWidget(tabWidget)
+        mainLayout.addWidget(closeButton)
 
         self.setLayout(mainLayout)
-        self.setWindowTitle(env.translate("aboutWindow.title"))
+        self.setWindowTitle(QCoreApplication.translate("AboutWindow", "About"))
+
+        self.resize(mainLayout.minimumSize())

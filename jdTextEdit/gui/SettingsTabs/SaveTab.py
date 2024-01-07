@@ -1,18 +1,25 @@
 from PyQt6.QtWidgets import QWidget, QCheckBox, QLineEdit, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout
 from jdTextEdit.api.SettingsTabBase import SettingsTabBase
+from PyQt6.QtCore import QCoreApplication
 from jdTextEdit.Settings import Settings
+from typing import TYPE_CHECKING
 
-class SaveTab(QWidget,SettingsTabBase):
-    def __init__(self, env):
+
+if TYPE_CHECKING:
+    from jdTextEdit.Environment import Environment
+
+
+class SaveTab(QWidget, SettingsTabBase):
+    def __init__(self, env: "Environment") -> None:
         super().__init__()
         self.env = env
 
-        self.eolFileEndCheckBox = QCheckBox(env.translate("settingsWindow.save.checkBox.eolFileEnd"))
-        self.stripSpacesCheckBox = QCheckBox(env.translate("settingsWindow.save.checkBox.stripSpaces"))
-        self.backupCheckBox = QCheckBox(env.translate("settingsWindow.save.checkBox.enableBackup"))
-        self.autoSaveCheckBox = QCheckBox(env.translate("settingsWindow.save.checkBox.enableAutoSave"))
-        self.autoSaveLabel = QLabel(env.translate("settingsWindow.save.label.autoSaveInterval"))
-        self.backupLabel = QLabel(env.translate("settingsWindow.save.label.backupExtension"))
+        self.eolFileEndCheckBox = QCheckBox(QCoreApplication.translate("SaveTab", "Insert end of line at end of file when saving"))
+        self.stripSpacesCheckBox = QCheckBox(QCoreApplication.translate("SaveTab", "Remove all spaces at the end of the line when saving"))
+        self.backupCheckBox = QCheckBox(QCoreApplication.translate("SaveTab", "Create a backup copy of files before saving"))
+        self.autoSaveCheckBox = QCheckBox(QCoreApplication.translate("SaveTab", "Enable automatic saving"))
+        self.autoSaveLabel = QLabel(QCoreApplication.translate("SaveTab", "Saving interval in seconds:"))
+        self.backupLabel = QLabel(QCoreApplication.translate("SaveTab", "Backup extension:"))
         self.autoSaveIntervalSpinBox = QSpinBox()
         self.backupExtensionEdit = QLineEdit()
 
@@ -39,33 +46,33 @@ class SaveTab(QWidget,SettingsTabBase):
 
         self.setLayout(mainLayout)
 
-    def updateBackupExtensionEnabled(self):
-        enabled = bool(self.backupCheckBox.checkState())
+    def updateBackupExtensionEnabled(self) -> None:
+        enabled = self.backupCheckBox.isChecked()
         self.backupLabel.setEnabled(enabled)
         self.backupExtensionEdit.setEnabled(enabled)
 
-    def updateAutoSaveEnabled(self):
-        enabled =  bool(self.autoSaveCheckBox.checkState())
+    def updateAutoSaveEnabled(self) -> None:
+        enabled = self.autoSaveCheckBox.isChecked()
         self.autoSaveLabel.setEnabled(enabled)
         self.autoSaveIntervalSpinBox.setEnabled(enabled)
 
-    def updateTab(self, settings: Settings):
-        self.eolFileEndCheckBox.setChecked(settings.eolFileEnd)
-        self.stripSpacesCheckBox.setChecked(settings.stripSpacesSave)
-        self.backupCheckBox.setChecked(settings.saveBackupEnabled)
-        self.backupExtensionEdit.setText(settings.saveBackupExtension)
-        self.autoSaveCheckBox.setChecked(settings.enableAutoSave)
-        self.autoSaveIntervalSpinBox.setValue(settings.autoSaveInterval)
+    def updateTab(self, settings: Settings) -> None:
+        self.eolFileEndCheckBox.setChecked(settings.get("eolFileEnd"))
+        self.stripSpacesCheckBox.setChecked(settings.get("stripSpacesSave"))
+        self.backupCheckBox.setChecked(settings.get("saveBackupEnabled"))
+        self.backupExtensionEdit.setText(settings.get("saveBackupExtension"))
+        self.autoSaveCheckBox.setChecked(settings.get("enableAutoSave"))
+        self.autoSaveIntervalSpinBox.setValue(settings.get("autoSaveInterval"))
         self.updateBackupExtensionEnabled()
         self.updateAutoSaveEnabled()
 
-    def getSettings(self, settings: Settings):
-        settings.set("eolFileEnd",self.eolFileEndCheckBox.isChecked())
-        settings.set("stripSpacesSave",self.stripSpacesCheckBox.isChecked())
-        settings.set("saveBackupEnabled",self.backupCheckBox.isChecked())
-        settings.set("saveBackupExtension",self.backupExtensionEdit.text())
-        settings.set("enableAutoSave",self.autoSaveCheckBox.isChecked())
-        settings.set("autoSaveInterval",self.autoSaveIntervalSpinBox.value())
+    def getSettings(self, settings: Settings) -> None:
+        settings.set("eolFileEnd", self.eolFileEndCheckBox.isChecked())
+        settings.set("stripSpacesSave", self.stripSpacesCheckBox.isChecked())
+        settings.set("saveBackupEnabled", self.backupCheckBox.isChecked())
+        settings.set("saveBackupExtension", self.backupExtensionEdit.text())
+        settings.set("enableAutoSave", self.autoSaveCheckBox.isChecked())
+        settings.set("autoSaveInterval", self.autoSaveIntervalSpinBox.value())
 
     def title(self) -> str:
-        return self.env.translate("settingsWindow.save")
+        return QCoreApplication.translate("SaveTab", "Save")
